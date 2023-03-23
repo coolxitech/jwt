@@ -19,20 +19,13 @@ abstract class OpenSSL extends BaseSigner
     public function createHash($payload, Key $key)
     {
         $privateKey = $this->getPrivateKey($key->getContent(), $key->getPassphrase());
-
-        try {
-            $signature = '';
-
-            if (! openssl_sign($payload, $signature, $privateKey, $this->getAlgorithm())) {
-                throw new InvalidArgumentException(
-                    'There was an error while creating the signature: ' . openssl_error_string()
-                );
-            }
-
-            return $signature;
-        } finally {
-            openssl_free_key($privateKey);
+        $signature = '';
+        if (! openssl_sign($payload, $signature, $privateKey, $this->getAlgorithm())) {
+            throw new InvalidArgumentException(
+                'There was an error while creating the signature: ' . openssl_error_string()
+            );
         }
+        return $signature;
     }
 
     /**
@@ -80,13 +73,13 @@ abstract class OpenSSL extends BaseSigner
     /**
      * Raises an exception when the key type is not the expected type
      *
-     * @param resource|bool $key
+     * @param OpenSSLAsymmetricKey|bool $key
      *
      * @throws InvalidArgumentException
      */
     private function validateKey($key)
     {
-        if (! is_resource($key)) {
+        if (is_bool($key)) {
             throw new InvalidArgumentException(
                 'It was not possible to parse your key, reason: ' . openssl_error_string()
             );
